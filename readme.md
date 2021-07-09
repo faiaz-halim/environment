@@ -1,6 +1,6 @@
-# Important: If any commands require sudo privileges and your user don't have passwordless sudo enabled, copy the commands from makefile and run in your favorite shell.
+> Important: If any commands require sudo privileges and your user don't have passwordless sudo enabled, copy the commands from makefile and run in your favorite shell.
 
-# Important: This was setup as proof-of-concept of a production system. For local development purpose please use 1 control-plane and 2 worker node configuration and RAM usage will be under control (assuming the system has atleast 5gb ram available).
+> Important: This was setup as proof-of-concept of a production system. For local development purpose please use 1 control-plane and 2 worker node configuration and RAM usage will be under control (assuming the system has atleast 5gb ram available).
 
 ## Install Docker
 
