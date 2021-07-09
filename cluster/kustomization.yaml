@@ -1,0 +1,9 @@
+commonLabels:
+  environment: dev
+resources:
+  - nfs-rbac.yaml
+  - nfs-storageclass.yaml
+  - nfs-deploy.yaml
+  - metallb-namespace.yaml
+  - metallb.yaml
+  - metallb-config.yaml

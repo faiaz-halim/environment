@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: grafana-storage-pv
+  namespace: monitoring
+spec:
+  storageClassName: k8s-nfs
+  claimRef:
+    name: grafana-storage-pv-claim
+    namespace: monitoring
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteMany
+  nfs: 
+    path: YOUR_NFS_SHARE_PATH
+    server: YOUR_NFS_SERVER_IP
+    readOnly: false

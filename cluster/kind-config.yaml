@@ -1,0 +1,105 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+networking:
+  disableDefaultCNI: true
+featureGates:
+  HPAScaleToZero: true
+nodes:
+- role: control-plane
+  image: kindest/node:v1.21.1@sha256:69860bda5563ac81e3c0057d654b5253219618a22ec3a346306239bba8cfa1a6
+  extraPortMappings:
+  - containerPort: 30000
+    hostPort: 30000
+    listenAddress: "0.0.0.0"
+  - containerPort: 30001
+    hostPort: 30001
+    listenAddress: "0.0.0.0" 
+  - containerPort: 30002
+    hostPort: 30002
+    listenAddress: "0.0.0.0"
+  - containerPort: 30003
+    hostPort: 30003
+    listenAddress: "0.0.0.0"
+  - containerPort: 30004
+    hostPort: 30004
+    listenAddress: "0.0.0.0"
+  - containerPort: 30005
+    hostPort: 30005
+    listenAddress: "0.0.0.0"
+  - containerPort: 30006
+    hostPort: 30006
+    listenAddress: "0.0.0.0"
+  - containerPort: 30007
+    hostPort: 30007
+    listenAddress: "0.0.0.0"
+  - containerPort: 30008
+    hostPort: 30008
+    listenAddress: "0.0.0.0"
+  - containerPort: 30009
+    hostPort: 30009
+    listenAddress: "0.0.0.0"
+  - containerPort: 30010
+    hostPort: 30010
+    listenAddress: "0.0.0.0"
+  - containerPort: 30011
+    hostPort: 30011
+    listenAddress: "0.0.0.0"
+  - containerPort: 30012
+    hostPort: 30012
+    listenAddress: "0.0.0.0"
+  - containerPort: 30013
+    hostPort: 30013
+    listenAddress: "0.0.0.0"
+  - containerPort: 30014
+    hostPort: 30014
+    listenAddress: "0.0.0.0"
+  - containerPort: 30015
+    hostPort: 30015
+    listenAddress: "0.0.0.0"
+  - containerPort: 30016
+    hostPort: 30016
+    listenAddress: "0.0.0.0"
+  - containerPort: 30017
+    hostPort: 30017
+    listenAddress: "0.0.0.0"
+  - containerPort: 30018
+    hostPort: 30018
+    listenAddress: "0.0.0.0"
+  - containerPort: 30019
+    hostPort: 30019
+    listenAddress: "0.0.0.0"
+  - containerPort: 30020
+    hostPort: 30020
+    listenAddress: "0.0.0.0"
+  - containerPort: 32767
+    hostPort: 32767
+    listenAddress: "0.0.0.0"
+- role: control-plane
+  image: kindest/node:v1.21.1@sha256:69860bda5563ac81e3c0057d654b5253219618a22ec3a346306239bba8cfa1a6
+- role: control-plane
+  image: kindest/node:v1.21.1@sha256:69860bda5563ac81e3c0057d654b5253219618a22ec3a346306239bba8cfa1a6
+- role: worker
+  image: kindest/node:v1.21.1@sha256:69860bda5563ac81e3c0057d654b5253219618a22ec3a346306239bba8cfa1a6
+- role: worker
+  image: kindest/node:v1.21.1@sha256:69860bda5563ac81e3c0057d654b5253219618a22ec3a346306239bba8cfa1a6
+- role: worker
+  image: kindest/node:v1.21.1@sha256:69860bda5563ac81e3c0057d654b5253219618a22ec3a346306239bba8cfa1a6
+- role: worker
+  image: kindest/node:v1.21.1@sha256:69860bda5563ac81e3c0057d654b5253219618a22ec3a346306239bba8cfa1a6
+- role: worker
+  image: kindest/node:v1.21.1@sha256:69860bda5563ac81e3c0057d654b5253219618a22ec3a346306239bba8cfa1a6
+kubeadmConfigPatches:
+- |
+  apiVersion: kubeadm.k8s.io/v1beta2
+  kind: ClusterConfiguration
+  apiServer:
+    extraArgs:
+      enable-admission-plugins: DefaultStorageClass,DefaultTolerationSeconds,LimitRanger,MutatingAdmissionWebhook,NamespaceLifecycle,PersistentVolumeClaimResize,Priority,ResourceQuota,RuntimeClass,ServiceAccount,StorageObjectInUseProtection,TaintNodesByCondition,ValidatingAdmissionWebhook
+      service-account-signing-key-file: /etc/kubernetes/pki/sa.key
+      service-account-key-file: /etc/kubernetes/pki/sa.pub
+      service-account-issuer: api
+      service-account-api-audiences: api,vault,factors
+  networking:
+    dnsDomain: "cluster.local"
+    podSubnet: "192.168.0.0/16"
+    serviceSubnet: "10.96.0.0/12"

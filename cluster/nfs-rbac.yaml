@@ -1,0 +1,97 @@
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: k8s-nfs
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: k8s-nfs-nfs-client-provisioner
+  namespace: k8s-nfs
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: k8s-nfs-nfs-client-provisioner-runner
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - persistentvolumes
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - persistentvolumeclaims
+  verbs:
+  - get
+  - list
+  - watch
+  - update
+- apiGroups:
+  - storage.k8s.io
+  resources:
+  - storageclasses
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - update
+  - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: run-k8s-nfs-nfs-client-provisioner
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: k8s-nfs-nfs-client-provisioner-runner
+subjects:
+- kind: ServiceAccount
+  name: k8s-nfs-nfs-client-provisioner
+  namespace: k8s-nfs
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: leader-locking-k8s-nfs-nfs-client-provisioner
+  namespace: k8s-nfs
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - endpoints
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: leader-locking-k8s-nfs-nfs-client-provisioner
+  namespace: k8s-nfs
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: leader-locking-k8s-nfs-nfs-client-provisioner
+subjects:
+- kind: ServiceAccount
+  name: k8s-nfs-nfs-client-provisioner
+  namespace: k8s-nfs
+

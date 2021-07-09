@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: grafana-storage-pv-claim
+  namespace: monitoring
+  labels:
+    app: grafana
+  annotations:
+    volume.beta.kubernetes.io/storage-class: k8s-nfs
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi

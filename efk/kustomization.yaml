@@ -1,0 +1,7 @@
+commonLabels:
+  environment: dev
+resources:
+  - elasticsearch_statefulset.yaml
+  - elasticsearch_svc.yaml
+  - fluentd.yaml
+  - kibana.yaml
