@@ -6,3 +6,7 @@ prom/manifests/setup/pv.yaml
 harbor/*
 !harbor/Makefile
 cilium-hubble
+*.key
+*.crt
+*.cert
+*.csr

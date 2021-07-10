@@ -47,6 +47,9 @@ cluster-config:
 
 cluster-dashboard-image:
 	sed -i 's/image: kubernetesui/image: harbor.localdomain.com:9443\/kind\/kubernetesui/g' cluster/dashboard.yaml
+	sed -i 's/image: k8s.gcr.io/image: harbor.localdomain.com:9443\/kind/g' cluster/nfs-deploy.yaml
+	sed -i 's/image: quay.io/image: harbor.localdomain.com:9443\/kind/g' cluster/metallb.yaml
+	sed -i 's/image: k8s.gcr.io/image: harbor.localdomain.com:9443\/kind/g' cluster/metrics.yaml
 
 cluster-config-custom: cluster-dashboard-image cluster-config
 
