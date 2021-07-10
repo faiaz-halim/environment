@@ -45,13 +45,13 @@ install-nfs-server:
 cluster-config:
 	kubectl apply -k ./cluster
 
-cluster-dashboard-image:
+cluster-kustomization-image:
 	sed -i 's/image: kubernetesui/image: harbor.localdomain.com:9443\/kind\/kubernetesui/g' cluster/dashboard.yaml
 	sed -i 's/image: k8s.gcr.io/image: harbor.localdomain.com:9443\/kind/g' cluster/nfs-deploy.yaml
 	sed -i 's/image: quay.io/image: harbor.localdomain.com:9443\/kind/g' cluster/metallb.yaml
 	sed -i 's/image: k8s.gcr.io/image: harbor.localdomain.com:9443\/kind/g' cluster/metrics.yaml
 
-cluster-config-custom: cluster-dashboard-image cluster-config
+cluster-config-custom: cluster-kustomization-image cluster-config
 
 cluster-config-delete:
 	kubectl delete -k ./cluster
