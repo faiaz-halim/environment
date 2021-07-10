@@ -193,6 +193,14 @@ For custom images, assuming you already pushed images with proper tags in your p
 make cluster-config-custom
 ```
 
+Access dashboard using proxy and service account token,
+
+```
+kubectl proxy
+http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/
+make get-token
+```
+
 ## Delete NFS storage class, Metallb loadbalancer, dashboard, metric server, serviceaccount
 
 Delete the manifest files using kustomization,

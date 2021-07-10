@@ -51,7 +51,10 @@ cluster-kustomization-image:
 	sed -i 's/image: quay.io/image: harbor.localdomain.com:9443\/kind/g' cluster/metallb.yaml
 	sed -i 's/image: k8s.gcr.io/image: harbor.localdomain.com:9443\/kind/g' cluster/metrics.yaml
 
-cluster-config-custom: cluster-kustomization-image cluster-config
+get-token:
+	kubectl -n kubernetes-dashboard get secret $$(kubectl -n kubernetes-dashboard get sa/admin-user -o jsonpath="{.secrets[0].name}") -o go-template="{{.data.token | base64decode}}"
+
+cluster-config-custom: cluster-kustomization-image cluster-config get-token
 
 cluster-config-delete:
 	kubectl delete -k ./cluster
