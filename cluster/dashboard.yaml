@@ -40,7 +40,8 @@ spec:
   ports:
     - port: 443
       targetPort: 8443
-  type: LoadBalancer
+      nodePort: 30001
+  type: NodePort
   selector:
     k8s-app: kubernetes-dashboard
 
