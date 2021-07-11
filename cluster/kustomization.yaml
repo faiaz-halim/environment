@@ -7,3 +7,6 @@ resources:
   - metallb-namespace.yaml
   - metallb.yaml
   - metallb-config.yaml
+  - metrics.yaml
+  - dashboard.yaml
+  - sa-admin.yaml
