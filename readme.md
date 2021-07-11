@@ -20,12 +20,79 @@ Install KinD with
 make install-kind
 ```
 
+## Private image registry
+
+If you are bootstrapping KinD cluster with more than 100 docker.io image pulls in a span of 6 hours, you'll hit docker pull limit (since image is being pulled anonymously so 200 pulls per logged in session won't apply). Another case is you may want to load custom images directly into cluster without going through a docker image registry. Note ```imagePullPolicy``` settings and it shouldn't be ```Always``` or images shouldn't use ```latest``` tag.
+
+In this case easiest solution is pull all docker images to local pc and load into kind cluster with, 
+
+```
+kind load docker-image IMAGE_NAME:TAG
+```
+
+The longest and safest (I trust you to ```NOT``` use self signed cert and distribute them using ```kind-config.yaml``` in any kind of production environment) in long run is to host a private registry with Harbor and host all necessary images in it. If you have patience to upload all necessary images for your cluster to run in private registry then ```Congratulations!!``` you are one step closer to creating an air-gapped secure cluster. Add the domain name for Harbor setup against your ip (not localhost) in ```/etc/hosts``` file.
+
+The commands are given in order from Harbor folder, please update with your own value if needed,
+
+```
+make harbor-cert
+make harbor-download
+make harbor-yml
+make harbor-prepare
+make harbor-install
+```
+
+Stop and start Harbor containers if needed,
+
+```
+make harbor-down
+make harbor-up
+```
+
+Update ```private_repo``` variable in ```.env`` and run following command to pull, tag and push necessary docker images to your private registry,
+
+```
+make cluster-private-images
+```
+
+To use images from private image registry, look for commands with ```custom``` mode.
+
 ## Create KinD cluster
+
+If you are not using private image registries like harbor, please delete following sections from ```cluster/kind-config.yaml```,
+
+```
+  extraMounts:
+    - containerPath: /etc/ssl/certs
+      hostPath: harbor/certs
+```
+
+```
+containerdConfigPatches:
+- |-
+  [plugins."io.containerd.grpc.v1.cri".registry.mirrors."harbor.localdomain.com:9443"]
+    endpoint = ["https://harbor.localdomain.com:9443"]
+  [plugins."io.containerd.grpc.v1.cri".registry.configs."harbor.localdomain.com".tls]
+      cert_file = "/etc/ssl/certs/harbor.localdomain.com.cert"
+      key_file  = "/etc/ssl/certs/harbor.localdomain.com.key"
+```
 
 Create KinD cluster with 
 
 ```
 make cluster-create
+```
+
+For any custom settings, private image registry, run following first,
+
+```
+make custom-mode
+```
+
+Update ```custom/cluster/kind-config.yaml``` with your certificate and key name, mount point. Create cluster with,
+
+```
+make cluster-create-custom
 ```
 
 ## Delete KinD cluster
@@ -47,24 +114,6 @@ make kubectl-config
 ```
 
 ### Common Troubleshooting:
-
-If you are not using private image registries like harbor, please delete following sections from ```cluster/kind-config.yaml```,
-
-```
-  extraMounts:
-    - containerPath: /etc/ssl/certs
-      hostPath: harbor/certs
-```
-
-```
-containerdConfigPatches:
-- |-
-  [plugins."io.containerd.grpc.v1.cri".registry.mirrors."harbor.localdomain.com:9443"]
-    endpoint = ["https://harbor.localdomain.com:9443"]
-  [plugins."io.containerd.grpc.v1.cri".registry.configs."harbor.localdomain.com".tls]
-      cert_file = "/etc/ssl/certs/harbor.localdomain.com.cert"
-      key_file  = "/etc/ssl/certs/harbor.localdomain.com.key"
-```
 
 If cluster creation process is taking a long time at "Starting control-plane" step and exits with error similar to,
 
@@ -96,42 +145,7 @@ curl https://docs.projectcalico.org/manifests/calico.yaml -O
 
 All Calico pods must be running before installing other components in cluster. If you want to use different CNI, download the manifest and replace filename in makefile.
 
-### Troubleshoot image pulls
-
-If you are bootstrapping KinD cluster with more than 100 docker.io image pulls in a span of 6 hours, you'll hit docker pull limit (since image is being pulled anonymously so 200 pulls per logged in session won't apply). Another case is you may want to load custom images directly into cluster without going through a docker image registry. Note ```imagePullPolicy``` settings and it shouldn't be ```Always``` or images shouldn't use ```latest``` tag.
-
-In this case easiest solution is pull all docker images to local pc and load into kind cluster with, 
-
-```
-kind load docker-image IMAGE_NAME:TAG
-```
-
-The longest and safest (I trust you to ```NOT``` use self signed cert and distribute them using ```kind-config.yaml``` in any kind of production environment) in long run is to host a private repository with Harbor and host all necessary images in it. If you have patience to upload all necessary images for your cluster to run in private repository then ```Congratulations!!``` you are one step closer to creating an air-gapped secure cluster. Add the domain name for Harbor setup against your ip (not localhost) in ```/etc/hosts``` file.
-
-The commands are given in order from Harbor folder, please update with your own value if needed,
-
-```
-make harbor-cert
-make harbor-download
-make harbor-yml
-make harbor-prepare
-make harbor-install
-```
-
-Stop and start Harbor containers if needed,
-
-```
-make harbor-down
-make harbor-up
-```
-
-Update ```cluster/kind-config.yaml``` with your certificate and key name, mount point. Update ```private_repo``` variable in ```.env`` and run following command to pull, tag and push necessary docker images to your private repository,
-
-```
-make cluster-private-images
-```
-
-Run following command to let calico manifest pull from private repository,
+Run following command to let calico manifest pull from private registry,
 
 ```
 make cluster-network-custom
@@ -147,6 +161,12 @@ Delete Calico CNI with,
 
 ```
 make cluster-network-delete
+```
+
+On custom mode,
+
+```
+cluster-network-custom-delete
 ```
 
 ## Install NFS server
@@ -197,7 +217,7 @@ Apply the manifest files using kustomization,
 make cluster-config
 ```
 
-For custom images, assuming you already pushed images with proper tags in your private repository,
+For custom images, assuming you already pushed images with proper tags in your private registry, (make sure you made updates to ```custom``` folder files)
 
 ```
 make cluster-config-custom
@@ -219,6 +239,12 @@ Delete the manifest files using kustomization,
 make cluster-config-delete
 ```
 
+On custom mode,
+
+```
+make cluster-config-custom-delete
+```
+
 ## Apply Elasticsearch-Fluentd-Kibana (EFK) log management system manifests
 
 EFK stack is used without ssl configuration and custom index, filter, tag rewrite rules. This is to simulate logging scenario in production environment. Custom configration can be applied to fluentd daemonset using configmap. Maybe in future a generic config file will be included. Elasticsearch runs as statefulset and as long as they are not deleted using manifest files from cluster, they will retain data in NFS share location and persist between any pod restart or reschedule. Kibana runs on nodeport ```30003``` so make sure to enable the port from any control-plane node in KinD cluster config.
@@ -229,12 +255,24 @@ Apply manifests with,
 make cluster-logging
 ```
 
+On custom mode with private image registry
+
+```
+make cluster-logging-custom
+```
+
 ## Delete Elasticsearch-Fluentd-Kibana (EFK)
 
 Delete EFK with, (Persistant volume will be renamed with prefix ```archieved``` and data will not be available unless copied manually to new volumes)
 
 ```
 make cluster-logging-delete
+```
+
+On custom mode,
+
+```
+make cluster-logging-custom-delete
 ```
 
 ## Apply Prometheus-Grafana monitoring system
@@ -302,6 +340,13 @@ Apply manifests with,
 make cluster-monitoring
 ```
 
+For private image registry in custom mode,
+
+```
+make cluster-monitoring-setup-custom
+make cluster-monitoring-custom
+```
+
 ## Delete Prometheus-Grafana monitoring system
 
 Delete prometheus, grafana, alertmanager and custom CRDs with,
@@ -309,6 +354,13 @@ Delete prometheus, grafana, alertmanager and custom CRDs with,
 ```
 make cluster-monitoring-delete
 make cluster-monitoring-uninstall
+```
+
+For custom mode,
+
+```
+make cluster-monitoring-custom-delete
+make cluster-monitoring-custom-uninstall
 ```
 
 ## Service mesh
@@ -323,6 +375,12 @@ Create istio-system namespace and install istio core components with demo profil
 
 ```
 make cluster-istio-install
+```
+
+Install istio components with private image registry,
+
+```
+make cluster-istio-custom-install
 ```
 
 ### Optional: Enable addons
@@ -361,9 +419,40 @@ Apply manifests with, (if any error comes up for first run, please run it again)
 make cluster-istio-addons
 ```
 
-## Docker image registry
+For private image registries, apply the service port changes in files first, then run following,
 
-### TODO
+```
+make custom-mode
+make cluster-istio-custom-addons
+```
+
+If any error comes up for first run, apply manifests again with,
+
+```
+make cluster-istio-custom-addons-apply
+```
+
+## Delete Prometheus-Grafana monitoring system
+
+Delete istio components, addons and custom CRDs with,
+
+```
+make cluster-istio-delete
+```
+
+For custom mode,
+
+```
+make cluster-istio-custom-delete
+```
+
+## Helm install
+
+To install Helm v3 run the following to install the operator and then run ```helm repo add repo_name repo_address``` to add repo and ```helm install name repo_name```,
+
+```
+make cluster-helm-install
+```
 
 ## Gitlab
 

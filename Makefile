@@ -20,6 +20,16 @@ install-kind:
 cluster-create:
 	kind create cluster --config cluster/kind-config.yaml --name gitops
 
+custom-mode:
+	mkdir -p custom
+	cp -r cluster custom/
+	cp -r efk custom/
+	cp -r prom custom/
+	cp -r istio custom/
+
+cluster-create-custom:
+	kind create cluster --config custom/cluster/kind-config.yaml --name gitops
+
 kubectl-install:
 	curl -LO "https://dl.k8s.io/release/$$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
 	sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
@@ -35,13 +45,16 @@ cluster-network:
 	sed -i 's/k8s,bgp"/k8s,bgp"\n            - name: IP_AUTODETECTION_METHOD\n              value: "interface=eth.*"/' cluster/calico.yaml
 	kubectl apply -f cluster/calico.yaml
 
-cluster-network-image:
-	sed -i 's/image: /image: ${ip_or_domain}:${port}\/${project}\//g' cluster/calico.yaml
-
-cluster-network-custom: cluster-network-image cluster-network
+cluster-network-custom:
+	sed -i 's/image: docker.io/image: ${ip_or_domain}:${port}\/${project}/g' custom/cluster/calico.yaml
+	sed -i 's/k8s,bgp"/k8s,bgp"\n            - name: IP_AUTODETECTION_METHOD\n              value: "interface=eth.*"/' custom/cluster/calico.yaml
+	kubectl apply -f custom/cluster/calico.yaml
 
 cluster-network-delete:
 	kubectl delete -f cluster/calico.yaml
+
+cluster-network-custom-delete:
+	kubectl delete -f custom/cluster/calico.yaml
 
 install-nfs-server:
 	sudo apt install nfs-kernel-server
@@ -51,37 +64,72 @@ cluster-config:
 	kubectl apply -k ./cluster
 
 cluster-kustomization-image:
-	sed -i 's/image: /image: ${ip_or_domain}:${port}\/${project}/\/g' cluster/dashboard.yaml
-	sed -i 's/image: /image: ${ip_or_domain}:${port}\/${project}/\/g' cluster/nfs-deploy.yaml
-	sed -i 's/image: /image: ${ip_or_domain}:${port}\/${project}/\/g' cluster/metallb.yaml
-	sed -i 's/image: /image: ${ip_or_domain}:${port}\/${project}/\/g' cluster/metrics.yaml
+	sed -i 's/image: /image: ${ip_or_domain}:${port}\/${project}\//g' custom/cluster/dashboard.yaml
+	sed -i 's/image: /image: ${ip_or_domain}:${port}\/${project}\//g' custom/cluster/nfs-deploy.yaml
+	sed -i 's/image: /image: ${ip_or_domain}:${port}\/${project}\//g' custom/cluster/metallb.yaml
+	sed -i 's/image: /image: ${ip_or_domain}:${port}\/${project}\//g' custom/cluster/metrics.yaml
+	kubectl apply -k ./custom/cluster
 
 get-token:
 	kubectl -n kubernetes-dashboard get secret $$(kubectl -n kubernetes-dashboard get sa/admin-user -o jsonpath="{.secrets[0].name}") -o go-template="{{.data.token | base64decode}}"
 
-cluster-config-custom: cluster-kustomization-image cluster-config get-token
+cluster-config-custom: cluster-kustomization-image get-token
 
 cluster-config-delete:
 	kubectl delete -k ./cluster
 
+cluster-config-custom-delete:
+	kubectl delete -k ./custom/cluster
+
 cluster-logging:
 	kubectl apply -k ./efk
 
+cluster-logging-custom:
+	sed -i 's/image: /image: ${ip_or_domain}:${port}\/${project}\//g' custom/efk/elasticsearch_statefulset.yaml
+	sed -i 's/image: /image: ${ip_or_domain}:${port}\/${project}\//g' custom/efk/fluentd.yaml
+	sed -i 's/image: /image: ${ip_or_domain}:${port}\/${project}\//g' custom/efk/kibana.yaml
+	kubectl apply -k ./custom/efk
+
 cluster-logging-delete:
 	kubectl delete -k ./efk
+
+cluster-logging-custom-delete:
+	kubectl delete -k ./custom/efk
 
 cluster-monitoring-setup:
 	kubectl apply -f prom/manifests/setup
 	kubectl wait deploy/prometheus-operator -n monitoring --for condition=available
 
+cluster-monitoring-setup-custom:
+	sed -i 's/image: /image: ${ip_or_domain}:${port}\/${project}\//g' custom/prom/manifests/setup/prometheus-operator-deployment.yaml
+	sed -i 's/--prometheus-config-reloader=/--prometheus-config-reloader=${ip_or_domain}:${port}\/${project}\//g' custom/prom/manifests/setup/prometheus-operator-deployment.yaml
+	kubectl apply -f custom/prom/manifests/setup
+	kubectl wait deploy/prometheus-operator -n monitoring --for condition=available
+
 cluster-monitoring:
 	kubectl apply -f prom/manifests
+
+cluster-monitoring-custom:
+	sed -i 's/image: /image: ${ip_or_domain}:${port}\/${project}\//g' custom/prom/manifests/alertmanager-alertmanager.yaml
+	sed -i 's/image: /image: ${ip_or_domain}:${port}\/${project}\//g' custom/prom/manifests/blackbox-exporter-deployment.yaml
+	sed -i 's/image: /image: ${ip_or_domain}:${port}\/${project}\//g' custom/prom/manifests/grafana-deployment.yaml
+	sed -i 's/image: /image: ${ip_or_domain}:${port}\/${project}\//g' custom/prom/manifests/kube-state-metrics-deployment.yaml
+	sed -i 's/image: /image: ${ip_or_domain}:${port}\/${project}\//g' custom/prom/manifests/node-exporter-daemonset.yaml
+	sed -i 's/image: /image: ${ip_or_domain}:${port}\/${project}\//g' custom/prom/manifests/prometheus-adapter-deployment.yaml
+	sed -i 's/image: /image: ${ip_or_domain}:${port}\/${project}\//g' custom/prom/manifests/prometheus-prometheus.yaml
+	kubectl apply -f custom/prom/manifests
 
 cluster-monitoring-delete:
 	kubectl delete -f prom/manifests
 
 cluster-monitoring-uninstall:
 	kubectl delete -f prom/manifests/setup
+
+cluster-monitoring-custom-delete:
+	kubectl delete -f custom/prom/manifests
+
+cluster-monitoring-custom-uninstall:
+	kubectl delete -f custom/prom/manifests/setup
 
 cluster-istioctl-install:
 	curl -L https://istio.io/downloadIstio | sh -
@@ -92,12 +140,32 @@ cluster-istio-install:
 	kubectl create namespace istio-system
 	istioctl install --set profile=demo -y
 
+cluster-istio-custom-install:
+	kubectl create namespace istio-system
+	istioctl install --set profile=demo --set hub=${ip_or_domain}:${port}/${project}/istio -y
+
 cluster-istio-addons:
 	kubectl apply -f istio/samples/addons
 	kubectl rollout status deployment/kiali -n istio-system
 
+cluster-istio-custom-addons-manifest:
+	sed -i 's/image: "/image: "${ip_or_domain}:${port}\/${project}\//g' custom/istio/samples/addons/grafana.yaml
+	sed -i 's/image: "docker.io/image: "${ip_or_domain}:${port}\/${project}/g' custom/istio/samples/addons/jaeger.yaml
+	sed -i 's/image: "/image: "${ip_or_domain}:${port}\/${project}\//g' custom/istio/samples/addons/kiali.yaml
+	sed -i 's/image: "/image: "${ip_or_domain}:${port}\/${project}\//g' custom/istio/samples/addons/prometheus.yaml
+
+cluster-istio-custom-addons-apply:
+	kubectl apply -f custom/istio/samples/addons
+	kubectl rollout status deployment/kiali -n istio-system
+
+cluster-istio-custom-addons: cluster-istio-custom-addons-manifest cluster-istio-custom-addons-apply
+
 cluster-istio-delete:
 	kubectl delete -f istio/samples/addons
+	kubectl delete namespace istio-system
+
+cluster-istio-custom-delete:
+	kubectl delete -f custom/istio/samples/addons
 	kubectl delete namespace istio-system
 
 cluster-helm-install:

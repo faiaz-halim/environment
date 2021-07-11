@@ -1,6 +1,7 @@
 .env
 nfs/
 pv/
+custom/
 cluster/metallb-config.yaml
 cluster/nfs-deploy.yaml
 prom/manifests/setup/pv.yaml
