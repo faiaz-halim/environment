@@ -38,7 +38,9 @@ delete-cluster
 
 ## Regenerate kubeconfig
 
-With every system reboot the exposed api server endpoint and certificate in kubeconfig will change. Regenerate kubeconfig of current cluster for kubectl with,
+With every system reboot the exposed api server endpoint and certificate in kubeconfig will change. Regenerate kubeconfig of current cluster for kubectl with, 
+
+> This will not work for HA settings. The haproxy loadbalancer container don't get certificate update this way. Copying api address ip and certificate over to loadbalancer docker container process is still ```TODO```. For HA KinD cluster you have to destroy cluster every time before shutdown and recreate it later.
 
 ```
 make kubectl-config
