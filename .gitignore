@@ -1,3 +1,4 @@
+.env
 nfs/
 pv/
 cluster/metallb-config.yaml
@@ -10,4 +11,3 @@ cilium-hubble
 *.crt
 *.cert
 *.csr
-utilities

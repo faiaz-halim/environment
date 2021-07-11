@@ -1,3 +1,5 @@
+include .env
+
 update:
 	git pull
 
@@ -26,12 +28,15 @@ kubectl-install:
 kubectl-config:
 	kind export kubeconfig --name gitops
 
+cluster-private-images:
+	./utilities/upload_images.sh ${private_repo}
+
 cluster-network:
 	sed -i 's/k8s,bgp"/k8s,bgp"\n            - name: IP_AUTODETECTION_METHOD\n              value: "interface=eth.*"/' cluster/calico.yaml
 	kubectl apply -f cluster/calico.yaml
 
 cluster-network-image:
-	sed -i 's/image: docker.io/image: harbor.localdomain.com:9443\/kind/g' cluster/calico.yaml
+	sed -i 's/image: /image: ${ip_or_domain}:${port}\/${project}\//g' cluster/calico.yaml
 
 cluster-network-custom: cluster-network-image cluster-network
 
@@ -46,10 +51,10 @@ cluster-config:
 	kubectl apply -k ./cluster
 
 cluster-kustomization-image:
-	sed -i 's/image: kubernetesui/image: harbor.localdomain.com:9443\/kind\/kubernetesui/g' cluster/dashboard.yaml
-	sed -i 's/image: k8s.gcr.io/image: harbor.localdomain.com:9443\/kind/g' cluster/nfs-deploy.yaml
-	sed -i 's/image: quay.io/image: harbor.localdomain.com:9443\/kind/g' cluster/metallb.yaml
-	sed -i 's/image: k8s.gcr.io/image: harbor.localdomain.com:9443\/kind/g' cluster/metrics.yaml
+	sed -i 's/image: /image: ${ip_or_domain}:${port}\/${project}/\/g' cluster/dashboard.yaml
+	sed -i 's/image: /image: ${ip_or_domain}:${port}\/${project}/\/g' cluster/nfs-deploy.yaml
+	sed -i 's/image: /image: ${ip_or_domain}:${port}\/${project}/\/g' cluster/metallb.yaml
+	sed -i 's/image: /image: ${ip_or_domain}:${port}\/${project}/\/g' cluster/metrics.yaml
 
 get-token:
 	kubectl -n kubernetes-dashboard get secret $$(kubectl -n kubernetes-dashboard get sa/admin-user -o jsonpath="{.secrets[0].name}") -o go-template="{{.data.token | base64decode}}"

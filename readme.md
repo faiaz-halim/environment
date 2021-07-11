@@ -2,6 +2,8 @@
 
 > Important: This was setup as proof-of-concept of a production system. For local development purpose please use 1 control-plane and 2 worker node configuration and RAM usage will be under control (assuming the system has atleast 5gb ram available).
 
+> Important: For any custom configurations rename ```.env.template``` to ```.env``` and use it with ```Makefile```. Look for commands with ```custom``` name.
+
 ## Install Docker
 
 Install Docker with
@@ -121,7 +123,13 @@ make harbor-down
 make harbor-up
 ```
 
-Update ```cluster/kind-config.yaml``` with your certificate and key name, mount point. Update ```Makefile``` with your domain:port/project repository address in ```cluster-network-image``` command. Run following command to let calico manifest pull from private repository,
+Update ```cluster/kind-config.yaml``` with your certificate and key name, mount point. Update ```private_repo``` variable in ```.env`` and run following command to pull, tag and push necessary docker images to your private repository,
+
+```
+make cluster-private-images
+```
+
+Run following command to let calico manifest pull from private repository,
 
 ```
 make cluster-network-custom
