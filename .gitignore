@@ -10,3 +10,4 @@ cilium-hubble
 *.crt
 *.cert
 *.csr
+utilities
