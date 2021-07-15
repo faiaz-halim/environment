@@ -1,0 +1,7 @@
+commonLabels:
+  environment: dev
+resources:
+  - pv.yaml
+  - pvc.yaml
+  - jenkins-deploy.yaml
+  - jenkins-svc.yaml

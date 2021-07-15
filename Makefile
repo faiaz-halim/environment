@@ -26,6 +26,7 @@ custom-mode:
 	cp -r efk custom/
 	cp -r prom custom/
 	cp -r istio custom/
+	cp -r jenkins custom/
 
 cluster-create-custom:
 	kind create cluster --config custom/cluster/kind-config.yaml --name gitops
@@ -70,10 +71,10 @@ cluster-kustomization-image:
 	sed -i 's/image: /image: ${ip_or_domain}:${port}\/${project}\//g' custom/cluster/metrics.yaml
 	kubectl apply -k ./custom/cluster
 
-get-token:
+get-dashboard-token:
 	kubectl -n kubernetes-dashboard get secret $$(kubectl -n kubernetes-dashboard get sa/admin-user -o jsonpath="{.secrets[0].name}") -o go-template="{{.data.token | base64decode}}"
 
-cluster-config-custom: cluster-kustomization-image get-token
+cluster-config-custom: cluster-kustomization-image get-dashboard-token
 
 cluster-config-delete:
 	kubectl delete -k ./cluster
@@ -97,6 +98,7 @@ cluster-logging-custom-delete:
 	kubectl delete -k ./custom/efk
 
 cluster-monitoring-setup:
+	mkdir -p nfs/grafana && chmod -R 777 nfs/grafana
 	kubectl apply -f prom/manifests/setup
 	kubectl wait deploy/prometheus-operator -n monitoring --for condition=available
 
@@ -168,6 +170,28 @@ cluster-istio-custom-delete:
 	kubectl delete -f custom/istio/samples/addons
 	kubectl delete namespace istio-system
 
+cluster-jenkins:
+	mkdir -p nfs/jenkins && chmod -R 777 nfs/jenkins
+	kubectl create namespace jenkins
+	kubectl apply -k ./jenkins
+
+cluster-jenkins-custom:
+	mkdir -p nfs/jenkins && chmod -R 777 nfs/jenkins
+	sed -i 's/image: /image: ${ip_or_domain}:${port}\/${project}\//g' custom/jenkins/jenkins-deploy.yaml
+	kubectl create namespace jenkins
+	kubectl apply -k ./custom/jenkins
+
+cluster-jenkins-delete:
+	kubectl delete -k ./jenkins
+	kubectl delete namespace jenkins
+
+cluster-jenkins-custom-delete:
+	kubectl delete -k ./custom/jenkins
+	kubectl delete namespace jenkins
+
+get-jenkins-token:
+	kubectl exec -ti -n jenkins $$(kubectl get pods -n jenkins | grep jenkins | awk '{print $$1}') -- cat /var/jenkins_home/secrets/initialAdminPassword
+
 cluster-helm-install:
 	curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
 
@@ -208,3 +232,7 @@ cluster-cilium-delete:
 
 delete-cluster:
 	kind delete cluster --name gitops
+
+all-custom: cluster-create-custom custom-mode cluster-network-custom cluster-config-custom cluster-logging-custom cluster-monitoring-setup-custom cluster-monitoring-custom cluster-istio-custom-install cluster-istio-custom-addons cluster-istio-custom-addons-apply
+
+

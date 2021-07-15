@@ -1,0 +1,21 @@
+version: '3.6'
+services:
+  web:
+    image: 'harbor.localdomain.com:9443/kind/gitlab/gitlab-ce:latest'
+    container_name: gitlab
+    restart: always
+    hostname: 'YOUR_IP'
+    privileged: True
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'http://YOUR_IP:3080'
+        gitlab_rails['gitlab_shell_ssh_port'] = 2244
+    ports:
+      - '3080:3080'
+      - '3443:3443'
+      - '2244:2244'
+    volumes:
+      - 'YOUR_NFS_SHARE_PATH/gitlab/gitlab-etc:/etc/gitlab'
+      - 'YOUR_NFS_SHARE_PATH/gitlab/gitlab-log:/var/log/gitlab'
+      - 'YOUR_NFS_SHARE_PATH/gitlab/gitlab-var:/var/opt/gitlab'
+      - 'YOUR_NFS_SHARE_PATH/gitlab/gitlab-backup:/var/opt/backups'

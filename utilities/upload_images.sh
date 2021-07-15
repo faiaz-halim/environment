@@ -45,7 +45,9 @@ docker_images=(
     istio/operator:1.10.2
     istio/pilot:1.10.2
     istio/proxyv2:1.10.2
-    istio/base:1.10.2
+    istio/base:1.10-dev.2
+    jenkins/jenkins:lts
+    gitlab/gitlab-ce:latest
 )
 
 # Docker pull, tag and push to new private repository

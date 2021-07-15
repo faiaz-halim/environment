@@ -4,6 +4,8 @@
 
 > Important: For any custom configurations rename ```.env.template``` to ```.env``` and use it with ```Makefile```. Look for commands with ```custom``` name.
 
+> Important: The gitlab omnibus dockerized installation provided here is for demonstration purpose only, not suitable for production use. Harden ```gitlab.rb``` settings and ensure encryption and ssl before setting up a standalone gitlab omnibus deployment.
+
 ## Install Docker
 
 Install Docker with
@@ -432,7 +434,7 @@ If any error comes up for first run, apply manifests again with,
 make cluster-istio-custom-addons-apply
 ```
 
-## Delete Prometheus-Grafana monitoring system
+## Delete istio service mesh
 
 Delete istio components, addons and custom CRDs with,
 
@@ -446,7 +448,7 @@ For custom mode,
 make cluster-istio-custom-delete
 ```
 
-## Helm install
+## Helm install (not used)
 
 To install Helm v3 run the following to install the operator and then run ```helm repo add repo_name repo_address``` to add repo and ```helm install name repo_name```,
 
@@ -454,13 +456,109 @@ To install Helm v3 run the following to install the operator and then run ```hel
 make cluster-helm-install
 ```
 
-## Gitlab
+## Gitlab install
 
-### TODO
+Set gitlab CE dockerized installation environment variable by renaming ```docker-compose.yml.template``` to ```docker-compose.yml``` in gitlab folder. Set your ip, ssh, http ports. From gitlab folder run following,
 
-## Jenkins
+```
+make gitlab-up
+```
 
-### TODO
+To view progress log,
+
+```
+make log
+```
+
+To check status, running processes, enter container,
+
+```
+make check-status
+make check-system
+make shell
+```
+
+To stop, start, restart gitlab,
+
+```
+make stop
+make start
+make restart
+```
+
+To get initial admin account ```root``` password or set it up,
+
+```
+make get-root-pass
+make set-root-pass
+```
+
+Log into gitlab with ```http://YOUR_IP:3080``` and user ```root``` and password from above commands. If it is hosted on non-private ip, disable new user sign up from admin panel.
+
+To take full backup,
+
+```
+make before-backup take-backup after-backup
+```
+
+## Delete gitlab
+
+Delete and remove gitlab with
+
+```
+make gitlab-down
+sudo rm -rf YOUR_NFS_SHARE_PATH/gitlab/*
+```
+
+## Jenkins install
+
+Rename ```pv.yaml.template``` to ```pv.yaml``` in jenkins folder and update following values with your own, (make sure folder write permission is present)
+
+```
+YOUR_NFS_SHARE_PATH
+YOUR_NFS_SERVER_IP
+```
+
+Install jenkins in cluster with,
+
+```
+make cluster-jenkins
+```
+
+Install jenkins in cluster with private image registry,
+
+```
+make custom-mode
+make cluster-jenkins-custom
+```
+
+Get jenkins initial password to login with ```admin``` account,
+
+```
+make get-jenkins-token
+```
+
+Detail steps on how to create CI pipelines in jenkins are in readme of jenkins folder.
+
+## Delete jenkins
+
+Delete jenkins from cluster,
+
+```
+make cluster-jenkins-delete
+```
+
+For custom mode,
+
+```
+make cluster-jenkins-custom-delete
+```
+
+To delete jenkins data,
+
+```
+sudo rm -rf YOUR_NFS_SHARE_PATH/jenkins/*
+```
 
 ## ArgoCD
 

@@ -7,6 +7,8 @@ cluster/nfs-deploy.yaml
 prom/manifests/setup/pv.yaml
 harbor/*
 !harbor/Makefile
+gitlab/docker-compose.yml
+jenkins/pv.yaml
 cilium-hubble
 *.key
 *.crt
