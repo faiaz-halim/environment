@@ -59,6 +59,22 @@ make cluster-private-images
 
 To use images from private image registry, look for commands with ```custom``` mode.
 
+## :TLDR:
+
+If you are lazy like me and don't want to go through reading all these commands
+
+For private image registry (setup harbor first), setup everything except gitlab and jenkins,
+
+```
+make all-custom
+```
+
+For dockerhub and public image repositories, setup everything except gitlab and jenkins,
+
+```
+TODO
+```
+
 ## Create KinD cluster
 
 If you are not using private image registries like harbor, please delete following sections from ```cluster/kind-config.yaml```,
