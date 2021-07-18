@@ -252,6 +252,5 @@ cluster-cilium-delete:
 delete-cluster:
 	kind delete cluster --name gitops
 
-all-custom: cluster-private-images cluster-create-custom custom-mode cluster-network-custom cluster-config-custom cluster-logging-custom cluster-monitoring-setup-custom cluster-monitoring-custom cluster-istio-custom-install cluster-istio-custom-addons cluster-istio-custom-addons-apply cluster-jenkins-custom
-
+all-custom: cluster-private-images cluster-create-custom custom-mode cluster-network-custom cluster-config-custom cluster-logging-custom cluster-monitoring-setup-custom cluster-monitoring-custom cluster-istio-custom-install cluster-istio-custom-addons cluster-istio-custom-addons-apply cluster-jenkins-custom cluster-minio-custom
 

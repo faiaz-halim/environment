@@ -63,13 +63,13 @@ To use images from private image registry, look for commands with ```custom``` m
 
 If you are lazy like me and don't want to go through reading all these commands
 
-For private image registry (setup harbor first), setup everything except gitlab and jenkins,
+For private image registry (setup harbor first), setup everything except gitlab,
 
 ```
-make all-custom
+make all-custom -i
 ```
 
-For dockerhub and public image repositories, setup everything except gitlab and jenkins,
+For dockerhub and public image repositories, setup everything except gitlab,
 
 ```
 TODO
