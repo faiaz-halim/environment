@@ -11,11 +11,23 @@ install-docker:
 	sudo apt-get install docker-ce docker-ce-cli containerd.io
 	sudo usermod -aG docker $$USER
 
+install-go:
+	curl -Lo ./go.tar.gz https://golang.org/dl/go1.16.6.linux-amd64.tar.gz
+	sudo tar -C /usr/local -xzf go.tar.gz
+
 install-kind:
 	curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.11.1/kind-linux-amd64
 	chmod +x ./kind
 	mv ./kind /usr/local/bin
 	which kind
+
+download-k8s-source:
+	mkdir -p $$GOPATH/src/k8s.io
+	cd $$GOPATH/src/k8s.io && git clone https://github.com/kubernetes/kubernetes
+
+build-node-image:
+	kind build node-image --image ${private_repo}/node:main --kube-root $$GOPATH/src/k8s.io/kubernetes
+	docker push ${private_repo}/node:main
 
 cluster-create:
 	kind create cluster --config cluster/kind-config.yaml --name gitops
@@ -30,7 +42,8 @@ custom-mode:
 	cp -r minio custom/
 
 cluster-create-custom:
-	kind create cluster --config custom/cluster/kind-config.yaml --name gitops
+	sed -i 's/image: /image: ${ip_or_domain}:${port}\/${project}\//g' custom/cluster/kind-config-custom.yaml
+	kind create cluster --config custom/cluster/kind-config-custom.yaml --name gitops
 
 kubectl-install:
 	curl -LO "https://dl.k8s.io/release/$$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
@@ -252,5 +265,5 @@ cluster-cilium-delete:
 delete-cluster:
 	kind delete cluster --name gitops
 
-all-custom: cluster-private-images cluster-create-custom custom-mode cluster-network-custom cluster-config-custom cluster-logging-custom cluster-monitoring-setup-custom cluster-monitoring-custom cluster-istio-custom-install cluster-istio-custom-addons cluster-istio-custom-addons-apply cluster-jenkins-custom cluster-minio-custom
+all-custom: cluster-private-images custom-mode cluster-create-custom cluster-network-custom cluster-config-custom cluster-logging-custom cluster-monitoring-setup-custom cluster-monitoring-custom cluster-istio-custom-install cluster-istio-custom-addons cluster-istio-custom-addons-apply cluster-jenkins-custom cluster-minio-custom
 

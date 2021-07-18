@@ -8,15 +8,30 @@
 
 ## Install Docker
 
-Install Docker with
+Install Docker with,
 
 ```
 make install-docker
 ```
 
+## Install GO (optional, only necessary if you want to build kind node images)
+
+Install go with,
+
+```
+make install-go
+```
+
+Set path in bashrc or zshrc,
+
+```
+export PATH=$PATH:/usr/local/go/bin
+export GOPATH=$HOME/go
+```
+
 ## Install KinD
 
-Install KinD with
+Install KinD with,
 
 ```
 make install-kind
@@ -73,6 +88,20 @@ For dockerhub and public image repositories, setup everything except gitlab,
 
 ```
 TODO
+```
+
+## Build KinD node-image
+
+Download kubernetes source code with, (will take few minutes)
+
+```
+make download-k8s-source
+```
+
+Build custom node image and tag it with your private image registry. (optional TODO) Add more packages to your node images if necessary.
+
+```
+make build-node-image
 ```
 
 ## Create KinD cluster
