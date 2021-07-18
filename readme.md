@@ -576,6 +576,54 @@ To delete jenkins data,
 sudo rm -rf YOUR_NFS_SHARE_PATH/jenkins/*
 ```
 
+## MinIO
+
+AWS S3 like object bucket storage is provided by MinIO. Storage class is ```k8s-nfs``` with NFS share backend with MinIO operator and custom ```tenants.minio.min.io``` CRD. The old way and probably useful for most development cases can be found at ```https://github.com/kubernetes/examples/tree/master/staging/storage/minio``` which provides both standalone and statefulset examples. For this repo the MinIO operator is used from ```https://github.com/minio/operator```. The ```init.yaml``` is generated first and applied and then ```tenant.yaml``` file is generated.
+
+```
+kubectl minio init --namespace minio-operator -o > minio/init.yaml
+kubectl create namespace minio
+kubectl minio tenant create minio --servers 1 --volumes 4 --capacity 200Gi --namespace minio --storage-class k8s-nfs -o > minio/tenant.yaml
+```
+
+You can go ahead and modify login credentials in ```minio-creds-secret``` secret for local use in ```tenant.yaml```. Deploy manifests with,
+
+```
+make cluster-minio
+```
+
+For custom install with private image registry,
+
+```
+make cluster-minio-custom
+```
+
+Start minio console in localhost temporarily with, (exposing tenant crd console service to nodeport permanently TODO)
+
+```
+kubectl port-forward service/minio-console 9443:9443 --namespace minio
+```
+
+You can also generate manifest files from helm chart with,
+
+```
+helm template minio --namespace minio-operator --create-namespace minio/minio-operator --output-dir minio
+```
+
+## Delete MinIO
+
+Delete MinIO from cluster,
+
+```
+make cluster-minio-delete
+```
+
+For custom mode,
+
+```
+make cluster-minio-custom-delete
+```
+
 ## ArgoCD
 
 ### TODO
@@ -584,7 +632,11 @@ sudo rm -rf YOUR_NFS_SHARE_PATH/jenkins/*
 
 ### TODO
 
-## Cluster backup, audit & security
+## K10 or Velero
+
+### TODO
+
+## Shipa
 
 ### TODO
 

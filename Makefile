@@ -27,6 +27,7 @@ custom-mode:
 	cp -r prom custom/
 	cp -r istio custom/
 	cp -r jenkins custom/
+	cp -r minio custom/
 
 cluster-create-custom:
 	kind create cluster --config custom/cluster/kind-config.yaml --name gitops
@@ -192,6 +193,24 @@ cluster-jenkins-custom-delete:
 get-jenkins-token:
 	kubectl exec -ti -n jenkins $$(kubectl get pods -n jenkins | grep jenkins | awk '{print $$1}') -- cat /var/jenkins_home/secrets/initialAdminPassword
 
+cluster-minio:
+	kubectl apply -f minio/init.yaml
+	kubectl apply -f minio/tenant.yaml
+
+cluster-minio-custom:
+	sed -i 's/image: /image: ${ip_or_domain}:${port}\/${project}\//g' custom/minio/init.yaml
+	sed -i 's/image: /image: ${ip_or_domain}:${port}\/${project}\//g' custom/minio/tenant.yaml
+	kubectl apply -f custom/minio/init.yaml
+	kubectl apply -f custom/minio/tenant.yaml
+
+cluster-minio-delete:
+	kubectl delete -f minio/tenant.yaml
+	kubectl delete -f minio/init.yaml
+
+cluster-minio-custom-delete:
+	kubectl delete -f custom/minio/tenant.yaml
+	kubectl delete -f custom/minio/init.yaml
+
 cluster-helm-install:
 	curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
 
@@ -233,6 +252,6 @@ cluster-cilium-delete:
 delete-cluster:
 	kind delete cluster --name gitops
 
-all-custom: cluster-private-images cluster-create-custom custom-mode cluster-network-custom cluster-config-custom cluster-logging-custom cluster-monitoring-setup-custom cluster-monitoring-custom cluster-istio-custom-install cluster-istio-custom-addons cluster-istio-custom-addons-apply
+all-custom: cluster-private-images cluster-create-custom custom-mode cluster-network-custom cluster-config-custom cluster-logging-custom cluster-monitoring-setup-custom cluster-monitoring-custom cluster-istio-custom-install cluster-istio-custom-addons cluster-istio-custom-addons-apply cluster-jenkins-custom
 
 

@@ -48,6 +48,9 @@ docker_images=(
     istio/base:1.10-dev.2
     jenkins/jenkins:lts
     gitlab/gitlab-ce:latest
+    minio/console:v0.7.5
+    minio/operator:v4.1.3
+    minio/minio:RELEASE.2021-06-17T00-10-46Z
 )
 
 # Docker pull, tag and push to new private repository
