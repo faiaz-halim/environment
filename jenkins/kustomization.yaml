@@ -3,5 +3,6 @@ commonLabels:
 resources:
   - pv.yaml
   - pvc.yaml
+  - jenkins-sa.yaml
   - jenkins-deploy.yaml
   - jenkins-svc.yaml

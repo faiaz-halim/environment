@@ -1,3 +1,4 @@
+---
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -10,6 +11,44 @@ spec:
     namespace: jenkins
   capacity:
     storage: 10Gi
+  accessModes:
+    - ReadWriteMany
+  nfs: 
+    path: YOUR_NFS_SHARE_PATH
+    server: YOUR_NFS_SERVER_IP
+    readOnly: false
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: jenkins-certs-pv
+  namespace: jenkins
+spec:
+  storageClassName: k8s-nfs
+  claimRef:
+    name: jenkins-certs-pv-claim
+    namespace: jenkins
+  capacity:
+    storage: 1Mi
+  accessModes:
+    - ReadWriteMany
+  nfs: 
+    path: YOUR_NFS_SHARE_PATH
+    server: YOUR_NFS_SERVER_IP
+    readOnly: false
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: harbor-certs-pv
+  namespace: jenkins
+spec:
+  storageClassName: k8s-nfs
+  claimRef:
+    name: harbor-certs-pv-claim
+    namespace: jenkins
+  capacity:
+    storage: 1Mi
   accessModes:
     - ReadWriteMany
   nfs: 

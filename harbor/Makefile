@@ -1,3 +1,4 @@
+include ../.env
 pwd = $(shell pwd)
 
 harbor-cert:
@@ -30,3 +31,11 @@ harbor-up:
 
 harbor-down:
 	sudo docker-compose down
+
+create-cert-nfs-dir:
+	mkdir -p ${nfs_share}/certs && chmod 777 ${nfs_share}/certs
+
+copy-cert-nfs:
+	cp certs/ca.crt ${nfs_share}/certs
+	cp certs/harbor.localdomain.com.cert ${nfs_share}/certs/client.cert
+	cp certs/harbor.localdomain.com.key ${nfs_share}/certs/client.key

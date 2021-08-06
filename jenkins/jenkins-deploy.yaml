@@ -16,6 +16,13 @@ spec:
       containers:
       - name: jenkins
         image: jenkins/jenkins:lts
+        env:
+          - name: DOCKER_HOST
+            value: "tcp://localhost:2376"
+          - name: DOCKER_CERT_PATH
+            value: "/certs/client"
+          - name: DOCKER_TLS_VERIFY
+            value: "1"
         ports:
           - name: http-port
             containerPort: 8080
@@ -24,7 +31,39 @@ spec:
         volumeMounts:
           - name: jenkins-storage
             mountPath: /var/jenkins_home
+          - name: jenkins-certs
+            mountPath: /certs/client
+          - name: harbor-certs
+            mountPath: /etc/docker/certs.d/harbor.localdomain.com:9443
+          - name: kubectl-binary
+            mountPath: /usr/local/bin/kubectl
+      - name: docker
+        image: docker:dind
+        # env:
+        #   - name: DOCKER_TLS_SAN
+        #     value: "DNS:docker.jenkins.svc.cluster.local"
+        ports:
+          - name: http-port
+            containerPort: 2376
+        volumeMounts:
+          - name: jenkins-storage
+            mountPath: /var/jenkins_home
+          - name: jenkins-certs
+            mountPath: /certs/client
+          - name: harbor-certs
+            mountPath: /etc/docker/certs.d/harbor.localdomain.com:9443
+        securityContext:
+          privileged: true  
       volumes:
       - name: jenkins-storage
         persistentVolumeClaim:
           claimName: jenkins-storage-pv-claim
+      - name: jenkins-certs
+        persistentVolumeClaim:
+          claimName: jenkins-certs-pv-claim
+      - name: harbor-certs
+        persistentVolumeClaim:
+          claimName: harbor-certs-pv-claim
+      - name: kubectl-binary
+        hostPath:
+          path: /usr/bin/kubectl

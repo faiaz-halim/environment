@@ -1,0 +1,42 @@
+version: '3.7'
+services:
+  jenkins:
+    image: 'harbor.localdomain.com:9443/kind/jenkins/jenkins:custom'
+    container_name: jenkins
+    user: root
+    privileged: True
+    environment:
+      - DOCKER_HOST=tcp://docker:2376
+      - DOCKER_CERT_PATH=/certs/client
+      - DOCKER_TLS_VERIFY=1
+    depends_on:
+      - docker
+    ports:
+      - '8080:8080'
+      - '50000:50000'
+    networks:
+      - jenkins
+    volumes:
+      - 'YOUR_NFS_SHARE_PATH/jenkins:/var/jenkins_home'
+      - 'YOUR_NFS_SHARE_PATH/jenkins/certs/client:/certs/client:ro'
+      - 'YOUR_NFS_SHARE_PATH/certs:/etc/docker/certs.d/harbor.localdomain.com:9443:ro'
+    #   - '/var/run/docker.sock:/var/run/docker.sock'
+
+  docker:
+    image: 'harbor.localdomain.com:9443/kind/docker:dind'
+    container_name: docker
+    user: root
+    privileged: True
+    ports:
+      - '2376:2376'
+    networks:
+      - jenkins
+    volumes:
+      - 'YOUR_NFS_SHARE_PATH/jenkins/certs/client:/certs/client'
+      - 'YOUR_NFS_SHARE_PATH/certs:/etc/docker/certs.d/harbor.localdomain.com:9443'
+      - 'YOUR_NFS_SHARE_PATH/jenkins:/var/jenkins_home'
+
+networks:
+  jenkins:
+    driver: bridge
+    

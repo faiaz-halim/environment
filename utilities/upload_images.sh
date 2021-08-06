@@ -47,10 +47,13 @@ docker_images=(
     istio/proxyv2:1.10.2
     istio/base:1.10-dev.2
     jenkins/jenkins:lts
+    docker:dind
+    jenkinsci/jnlp-slave
     gitlab/gitlab-ce:latest
     minio/console:v0.7.5
     minio/operator:v4.1.3
     minio/minio:RELEASE.2021-06-17T00-10-46Z
+    gcr.io/kubernetes-e2e-test-images/dnsutils:1.3
 )
 
 # Docker pull, tag and push to new private repository

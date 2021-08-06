@@ -40,6 +40,7 @@ custom-mode:
 	cp -r istio custom/
 	cp -r jenkins custom/
 	cp -r minio custom/
+	cp -r utilities custom/
 
 cluster-create-custom:
 	sed -i 's/image: /image: ${ip_or_domain}:${port}\/${project}\//g' custom/cluster/kind-config-custom.yaml
@@ -190,8 +191,9 @@ cluster-jenkins:
 	kubectl apply -k ./jenkins
 
 cluster-jenkins-custom:
-	mkdir -p nfs/jenkins && chmod -R 777 nfs/jenkins
-	sed -i 's/image: /image: ${ip_or_domain}:${port}\/${project}\//g' custom/jenkins/jenkins-deploy.yaml
+	mkdir -p nfs/jenkins && sudo chmod -R 777 nfs/jenkins
+	sed -i 's/image: jenkins\/jenkins:lts/image: ${ip_or_domain}:${port}\/${project}\/jenkins\/jenkins:custom/g' custom/jenkins/jenkins-deploy.yaml
+	sed -i 's/image: docker:dind/image: ${ip_or_domain}:${port}\/${project}\/docker:dind/g' custom/jenkins/jenkins-deploy.yaml
 	kubectl create namespace jenkins
 	kubectl apply -k ./custom/jenkins
 
@@ -205,6 +207,9 @@ cluster-jenkins-custom-delete:
 
 get-jenkins-token:
 	kubectl exec -ti -n jenkins $$(kubectl get pods -n jenkins | grep jenkins | awk '{print $$1}') -- cat /var/jenkins_home/secrets/initialAdminPassword
+
+get-jenkins-sa-token:
+	kubectl -n jenkins get secret $$(kubectl -n jenkins get sa/jenkins-sa -o jsonpath="{.secrets[0].name}") -o go-template="{{.data.token | base64decode}}"
 
 cluster-minio:
 	kubectl apply -f minio/init.yaml
@@ -223,6 +228,21 @@ cluster-minio-delete:
 cluster-minio-custom-delete:
 	kubectl delete -f custom/minio/tenant.yaml
 	kubectl delete -f custom/minio/init.yaml
+
+cluster-velero-download:
+	curl -Lo ./velero.tar.gz https://github.com/vmware-tanzu/velero/releases/download/v1.6.2/velero-v1.6.2-linux-amd64.tar.gz
+	tar -xzf velero.tar.gz --strip-components=1
+	sudo mv velero /usr/local/bin && rm -rf examples LICENSE
+
+cluster-velero-install:
+	velero install \
+    --provider aws \
+    --plugins velero/velero-plugin-for-aws:v1.0.0 \
+    --use-restic \
+    --bucket velero \
+    --secret-file ./minio/credentials-minio \
+    --use-volume-snapshots=false \
+    --backup-location-config region=minio,s3ForcePathStyle="true",s3Url=https://minio.minio.svc:9000 
 
 cluster-helm-install:
 	curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
@@ -265,5 +285,18 @@ cluster-cilium-delete:
 delete-cluster:
 	kind delete cluster --name gitops
 
-all-custom: cluster-private-images custom-mode cluster-create-custom cluster-network-custom cluster-config-custom cluster-logging-custom cluster-monitoring-setup-custom cluster-monitoring-custom cluster-istio-custom-install cluster-istio-custom-addons cluster-istio-custom-addons-apply cluster-jenkins-custom cluster-minio-custom
+dnsutils:
+	kubectl apply -f utilities/dnsutils.yaml
+
+dnsutils-custom:
+	sed -i 's/image: /image: ${ip_or_domain}:${port}\/${project}\//g' custom/utilities/dnsutils.yaml
+	kubectl apply -f custom/utilities/dnsutils.yaml
+
+dnsutils-delete:
+	kubectl delete -f utilities/dnsutils.yaml
+
+dnsutils-custom-delete:
+	kubectl delete -f custom/utilities/dnsutils.yaml
+
+all-custom: cluster-private-images custom-mode cluster-create-custom cluster-network-custom cluster-config-custom cluster-logging-custom cluster-monitoring-setup-custom cluster-monitoring-custom cluster-istio-custom-install cluster-istio-custom-addons cluster-istio-custom-addons-apply cluster-minio-custom
 

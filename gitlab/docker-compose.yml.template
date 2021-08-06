@@ -13,7 +13,7 @@ services:
     ports:
       - '3080:3080'
       - '3443:3443'
-      - '2244:2244'
+      - '2244:22'
     volumes:
       - 'YOUR_NFS_SHARE_PATH/gitlab/gitlab-etc:/etc/gitlab'
       - 'YOUR_NFS_SHARE_PATH/gitlab/gitlab-log:/var/log/gitlab'

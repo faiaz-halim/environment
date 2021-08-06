@@ -4,11 +4,14 @@ pv/
 custom/
 cluster/metallb-config.yaml
 cluster/nfs-deploy.yaml
+cluster/kind-config-custom.yaml
 prom/manifests/setup/pv.yaml
 harbor/*
 !harbor/Makefile
 gitlab/docker-compose.yml
+jenkins/docker-compose.yml
 jenkins/pv.yaml
+minio/credentials-minio
 cilium-hubble
 *.key
 *.crt

@@ -74,20 +74,11 @@ make cluster-private-images
 
 To use images from private image registry, look for commands with ```custom``` mode.
 
-## :TLDR:
-
-If you are lazy like me and don't want to go through reading all these commands
-
-For private image registry (setup harbor first), setup everything except gitlab,
+Update ```nfs_share``` variable in ```.env`` and copy certificates to nfs share so pods like jenkins can trust it for docker related operations,
 
 ```
-make all-custom -i
-```
-
-For dockerhub and public image repositories, setup everything except gitlab,
-
-```
-TODO
+make create-cert-nfs-dir
+make copy-cert-nfs
 ```
 
 ## Build KinD node-image
@@ -106,7 +97,22 @@ make build-node-image
 
 ## Create KinD cluster
 
-If you are not using private image registries like harbor, please delete following sections from ```cluster/kind-config.yaml```,
+If you are not using private image registries like harbor, create KinD cluster with,
+
+```
+make cluster-create
+```
+
+For any custom settings, private image registry, copy ```cluster/kind-config-custom.yaml.template``` to ```cluster/kind-config-custom.yaml``` and update it with your certificate and key name, mount point. Update apiServerAddress and apiServerPort with your current ip address and any port to expose the cluster. 
+
+> Important: KinD cluster should not be exposed publicly. This settings are not suitable for any production environment. Please be aware of security concerns before exposing local KinD cluster publicly. 
+
+```
+networking:
+  disableDefaultCNI: true
+  apiServerAddress: "YOUR_IP"
+  apiServerPort: YOUR_PORT
+```
 
 ```
   extraMounts:
@@ -124,19 +130,13 @@ containerdConfigPatches:
       key_file  = "/etc/ssl/certs/harbor.localdomain.com.key"
 ```
 
-Create KinD cluster with 
-
-```
-make cluster-create
-```
-
-For any custom settings, private image registry, run following first,
+Run following first,
 
 ```
 make custom-mode
 ```
 
-Update ```custom/cluster/kind-config.yaml``` with your certificate and key name, mount point. Create cluster with,
+Create cluster with,
 
 ```
 make cluster-create-custom
@@ -148,6 +148,22 @@ Destroy KinD cluster with, (NFS storage contents won't be deleted)
 
 ```
 delete-cluster
+```
+
+## :TLDR:
+
+If you are lazy like me and don't want to go through reading all these commands
+
+For private image registry (setup harbor first), copy custom cluster config and certificates in above steps, setup everything except gitlab and jenkins,
+
+```
+make all-custom -i
+```
+
+For dockerhub and public image repositories, setup everything except gitlab jenkins,
+
+```
+TODO
 ```
 
 ## Regenerate kubeconfig
@@ -564,13 +580,26 @@ YOUR_NFS_SHARE_PATH
 YOUR_NFS_SERVER_IP
 ```
 
+If you don't want to execute docker related operation (build, run etc), remove container ```docker``` from containers section in ```jenkins/jenkins-deploy.yaml```. 
+You can also declare separate ```docker:dind``` based deployment and service manifest, mention the cluster dns for that DinD service in ```DNS:``` env variable and replace ```DOCKER_HOST``` value with it in ```jenkins/jenkins-deploy.yaml```. 
+
+> Important: Docker DinD as a separate service randomly closes connection as testing is found. If no other pod is going to use DinD service, it is recommended to attach it as sidecar of Jenkins container.
+
 Install jenkins in cluster with,
 
 ```
 make cluster-jenkins
 ```
 
-Install jenkins in cluster with private image registry,
+Install jenkins in cluster with custom image derived from LTS version in private image registry,
+
+In Jenkins folder,
+
+```
+make build
+```
+
+In root folder,
 
 ```
 make custom-mode
@@ -581,6 +610,23 @@ Get jenkins initial password to login with ```admin``` account,
 
 ```
 make get-jenkins-token
+```
+
+Get jenkins service account access token for jenkins pipeline,
+
+```
+make get-jenkins-sa-token
+```
+
+If you want to install jenkins standalone with docker-compose,
+
+In Jenkins folder,
+
+```
+make build
+make jenkins-up
+make log
+make get-token
 ```
 
 Detail steps on how to create CI pipelines in jenkins are in readme of jenkins folder.
@@ -597,6 +643,12 @@ For custom mode,
 
 ```
 make cluster-jenkins-custom-delete
+```
+
+For docker-compose in jenkins folder,
+
+```
+make jenkins-down
 ```
 
 To delete jenkins data,
@@ -684,3 +736,38 @@ make cluster-minio-custom-delete
 ## Cilium & Hubble
 
 ### Will be explored later as it conflicts with coredns pods in calico cni
+
+## DNSUtils
+
+Apply dnsutils manifest with,
+
+```
+make dnsutils
+```
+
+For custom install with private image registry,
+
+```
+make dnsutils-custom
+```
+
+Use dnsutils to check service availability for cluster internal or external dns addresses,
+
+```
+kubectl exec -i -t dnsutils -- nslookup kubernetes.default
+kubectl exec -i -t dnsutils -- nslookup jenkins.jenkins.svc.cluster.local
+```
+
+## Delete DNSUtils
+
+Delete dnsutils from cluster,
+
+```
+make dnsutils-delete
+```
+
+For custom mode,
+
+```
+make dnsutils-custom-delete
+```

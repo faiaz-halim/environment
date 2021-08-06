@@ -1,3 +1,4 @@
+---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -13,3 +14,35 @@ spec:
   resources:
     requests:
       storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: jenkins-certs-pv-claim
+  namespace: jenkins
+  labels:
+    app: jenkins
+  annotations:
+    volume.beta.kubernetes.io/storage-class: k8s-nfs
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Mi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: harbor-certs-pv-claim
+  namespace: jenkins
+  labels:
+    app: jenkins
+  annotations:
+    volume.beta.kubernetes.io/storage-class: k8s-nfs
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Mi
